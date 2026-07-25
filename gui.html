@@ -14,13 +14,13 @@
 </div>
 <div id="raceFileName"></div>
 <div id="result"></div>
-<div id="input"><table>
-<tr><th>QE</th><th>Helm</th><th>Crew</th><th>Class</th><th>Time</th><th>Laps</th><th>code</th></tr>
+<div id="input">
+    <table>
+    <tr><th>QE</th><th>Helm</th><th>Crew</th><th>Class</th><th>Time</th><th>Laps</th><th>code</th></tr>
 <tbody id="rows"></tbody>
 </table>
 <div class="button-bar">
 <button onclick="addRow()">Add Entry</button>
-<button onclick="score()">score</button></div>
 </div>
 <script>
 
@@ -106,7 +106,7 @@ async function getHandicaps() {
     console.log("pyDict")
     console.log(pyDict)
     //populate form with a selection of rows
-    for(let i=0;i<2;i++){addRow()}
+    for(let i=0;i<26;i++){addRow()}
 }
 
 function selectByText(select,text)
@@ -222,12 +222,12 @@ let tbody=document.getElementById("rows");
 let tr=document.createElement("tr");
 tr.className = "inputRow"
 tr.innerHTML= `
-<td><select class="qe"><option></option></td>
-<td><input class="helm"></td>
-<td><input class="crew"></td>
-<td><select class="boatClass"><option></option></select></td>
-<td><input class="time" type="number" min="1" max="36000" step="1"></td>
-<td><input class="laps" type="number" min="1" max="100" step="1"></td>
+<td><select class="qe" onchange="score()"><option></option></td>
+<td><input class="helm" onchange="score()"></td>
+<td><input class="crew" onchange="score()"></td>
+<td><select class="boatClass" onchange="score()"><option></option></select></td>
+<td><input class="time" type="number" min="1" max="36000" step="1" onchange="score()"></td>
+<td><input class="laps" type="number" min="1" max="100" step="1" onchange="score()"></td>
 <td><select class="code">
     <option></option>
     <option>DNF</option>
