@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<title>Race</title>
+<head>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div id="raceDetailsForm">
+    <div><label for="raceDate">Date:</label><input type="date" id="raceDate"></div>
+    <div><label for="raceNumber">Race Number:</label><input type="number" id="raceNumber" value=""></div>
+    <div><label for="raceOfficer">Race Officer:</label><input type="text" id="raceOfficer" value=""></div>
+    <div><label for="series">Series:</label><input type="text" id="series" value=""></div>
+    <button onclick="createRace()">Create Race</button>
+</div>
+<div id="raceFileName"></div>
+<div id="result"></div>
+<div id="input"><table>
+<tr><th>QE</th><th>Helm</th><th>Crew</th><th>Class</th><th>Time</th><th>Laps</th><th>code</th></tr>
+<tbody id="rows"></tbody>
+</table>
+<div class="button-bar">
+<button onclick="addRow()">Add Entry</button>
+<button onclick="score()">score</button></div>
+</div>
+<script>
+
+document.getElementById("raceDetailsForm").style.display = "block";
+document.getElementById("input").style.display = "none";
+
+let raceFileName = "raceName"
+let entries = [];
+let QEsLoaded = false;
+let QES = [];
+let QESdict = new Map(); 
+let handicaps = [];
+let pyDict = new Map(); 
+
+//set a default race Date
+document.getElementById("raceDate").value =new Date().toISOString().split("T")[0];
+
+window.addEventListener('pywebviewready', function () {
+    api = pywebview.api;
+    getQEs()
+    getHandicaps()
+});
+
+function createRace() {
+    // Read values
+    let raceName = document.getElementById("series").value;
+    let raceNumber = document.getElementById("raceNumber").value;
+    let raceOfficer = document.getElementById("raceOfficer").value;
+    let date = document.getElementById("raceDate").value;
+
+    console.log("date")
+    console.log(date)
+    // Clean values
+    function clean(value) {
+        return value
+            .replace(/\//g, "-")   // replace / with -
+            .replace(/\s/g, "");    // remove all spaces
+    }
+
+    raceName = clean(raceName);
+    raceOfficer = clean(raceOfficer);
+    const [year, month, day] = date.split("-");
+    const formattedDate = `${day}-${month}-${year}`;
+
+    // Construct filename
+    raceFileName = `${raceName}_${raceNumber}_${raceOfficer}_${formattedDate}.race`;
+
+    document.getElementById("raceDetailsForm").style.display = "none";
+    document.getElementById("input").style.display = "block";
+    setTitle()
+}
+
+async function setTitle(params) {
+    await pywebview.api.setTitle(raceFileName);
+}
+
+async function save(filname,fileString) {
+    await pywebview.api.saveRaceFile(raceFileName,fileString);
+}
+
+async function getQEs() {
+QES = await pywebview.api.QES();
+QES.forEach( row => {
+    QESdict[row.QE] =  row;
+    });
+    QEsLoaded = true;
+}
+
+async function getHandicaps() {
+    
+    //wait for QEsDict to be populated
+    while(QEsLoaded != true){
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    handicaps = await pywebview.api.handicaps();
+    handicaps.forEach( row => {
+         pyDict.set(row.boatClass,row.PY);
+        });
+
+    console.log("handicaps")
+    console.log(handicaps)
+    console.log("pyDict")
+    console.log(pyDict)
+    //populate form with a selection of rows
+    for(let i=0;i<2;i++){addRow()}
+}
+
+function selectByText(select,text)
+{
+   for (const option of select.options) {
+
+      if (option.text === text) {
+        option.selected = true;
+        break;
+      }
+    }
+}
+
+function score()
+{
+let rows = document.getElementsByClassName("inputRow")
+entries = []
+
+Array.from(rows).forEach(row => {
+    console.log(row)
+    let entry = {
+    QE : row.getElementsByClassName("qe")[0].value,
+    helm: row.getElementsByClassName("helm")[0].value,
+    crew: row.getElementsByClassName("crew")[0].value,
+    boatClass: row.getElementsByClassName("boatClass")[0].value,
+    time: row.getElementsByClassName("time")[0].value,
+    code: row.getElementsByClassName("code")[0].value,
+    laps: row.getElementsByClassName("laps")[0].value,
+    correctedTime :Infinity,
+    place : rows.length +1,
+    }
+
+    if(!(entry.QE == "" && entry.helm == "" && entry.time == "" && entry.boatClass == ""))
+    {
+    entries.push(entry)
+    }
+});
+entries.forEach(entry => {
+    entry.corrected = Infinity
+    if(entry.time != 0 && entry.boatClass != "")
+    {
+        let py = pyDict.get(entry.boatClass)
+        console.log(py)
+        entry.correctedTime = Math.round(entry.time*1000/py)
+    }
+});
+
+entries.sort((a, b) => a.correctedTime - b.correctedTime);
+
+let tableHtml = `<table><tr>
+                <th>Class</th>
+                <th>Helm and Crew</th>
+                <th>Time</th>
+                <th>laps</th>
+                <th>Corrrected Time</th>
+                <th>Place</th>
+                </tr>`
+
+entries.forEach((entry, index) => {
+    
+    let corrected = entry.correctedTime
+let i = 0;
+
+while (i < entries.length) {
+    let start = i;
+    let end = i;
+
+    // Find all entries with the same corrected time
+    while (end + 1 < entries.length &&
+           entries[end + 1].correctedTime === entries[start].correctedTime) {
+        end++;
+    }
+
+    // Calculate average position (1-based)
+    let averageRank = ((start + 1) + (end + 1)) / 2;
+
+    // Apply rank to all tied entries
+    for (let j = start; j <= end; j++) {
+        if(entries[j].time == Infinity || entries[j].code != "")
+            {entries[j].position = entries.length+1}
+        entries[j].position = averageRank;
+    }
+    i = end + 1;
+}
+    let correctedTime = "" 
+    if(entry.correctedTime < Infinity){correctedTime = String(entry.correctedTime)}
+    if(entry.code != ""){correctedTime=entry.code;}
+
+    tableHtml += `<tr><td>${entry.boatClass}</td>
+                <td>${entry.helm} ${entry.crew}</td>
+                <td>${entry.time}</td>
+                <td>${entry.laps}</td>
+                <td>${correctedTime}</td>
+                <td>${entry.place}</td>
+                </tr>` 
+    });
+
+    tableHtml += "</table>"
+
+document.getElementById("result").innerHTML = tableHtml
+
+//create Race file
+raceString = raceFileName +"\n"
+entries.forEach(entry =>{
+    raceString += `${entry.QE},${entry.helm},${entry.crew},${entry.boatClass},,${entry.time},${entry.laps},,\n`
+})
+
+save(raceFileName,raceString)
+
+}
+
+function addRow()
+{
+let classes = []
+let tbody=document.getElementById("rows");
+let tr=document.createElement("tr");
+tr.className = "inputRow"
+tr.innerHTML= `
+<td><select class="qe"><option></option></td>
+<td><input class="helm"></td>
+<td><input class="crew"></td>
+<td><select class="boatClass"><option></option></select></td>
+<td><input class="time" type="number" min="1" max="36000" step="1"></td>
+<td><input class="laps" type="number" min="1" max="100" step="1"></td>
+<td><select class="code">
+    <option></option>
+    <option>DNF</option>
+    <option>DNC</option>
+    <option>OCS</option>
+    <option>RTD</option>
+    </select></td>
+</td>
+`;
+
+tbody.appendChild(tr);
+
+let classSelect = tr.getElementsByClassName("boatClass")[0]
+let QESelect = tr.getElementsByClassName("qe")[0]
+let helm = tr.getElementsByClassName("helm")[0]
+let crew = tr.getElementsByClassName("crew")[0]
+let boatClass = tr.getElementsByClassName("boatClass")[0]
+
+for(let i =1;i<26;i++){
+    let option = document.createElement("option")
+    option.value = i
+    option.text = i
+};
+
+handicaps.forEach(row => {
+    let option = document.createElement("option")
+    option.value = row["boatClass"]
+    option.text = row["boatClass"]
+    classSelect.appendChild(option);
+});
+
+QES.forEach(row => {
+    let option = document.createElement("option")
+    option.value = row["QE"]
+    option.text = row["QE"] 
+    QESelect.appendChild(option);
+});
+
+QESelect.addEventListener("change",  (event) => {
+  const QEcode = event.target.value;
+  if(QEcode != "")
+  {
+      QE = QESdict[QEcode];
+      helm.value = QE.Helm;
+      crew.value = QE.Crew;
+      selectByText(boatClass,QE.boatClass)
+   
+  }
+  else
+  {
+      helm.value = "";
+      crew.value = "";
+      selectByText(boatClass,"")
+  }
+});
+
+}
+
+function saveRow(button)
+{
+let row=button.closest("tr");
+let entry={
+qecode: row.querySelector(".qe").value,
+helm: row.querySelector(".helm").value,
+crew: row.querySelector(".crew").value || null,
+boat_class: row.querySelector(".class").value,
+sail_no: row.querySelector(".sail").value || null,
+
+personal_handicap:
+    Number(row.querySelector(".handicap").value),
+age_group:
+    row.querySelector(".age").value,
+fleet:
+    row.querySelector(".fleet").value
+};
+
+window.pywebview.api.save_entry(entry)
+.then(result=>{
+alert(result.message);
+});
+}
+
+</script>
+</body>
+</html>
+
