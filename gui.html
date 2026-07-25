@@ -144,13 +144,20 @@ Array.from(rows).forEach(row => {
     entries.push(entry)
     }
 });
+
+maxLaps = 1
+entries.forEach(entry => {
+    if(entry.laps > maxLaps)
+    {maxLaps = entry.laps}
+});
+
 entries.forEach(entry => {
     entry.corrected = Infinity
     if(entry.time != 0 && entry.boatClass != "")
     {
-        let py = pyDict.get(entry.boatClass)
+        let py = parseFloat(pyDict.get(entry.boatClass))
         console.log(py)
-        entry.correctedTime = Math.round(entry.time*1000/py)
+        entry.correctedTime = Math.round((entry.time*maxLaps*1000.0/entry.laps/py))
     }
 });
 
@@ -168,29 +175,19 @@ let tableHtml = `<table><tr>
 entries.forEach((entry, index) => {
     
     let corrected = entry.correctedTime
-let i = 0;
+    let i = 0;
+    let place = 0
+    let numberTied = 0
+    
+    entries.forEach((element,n) => {
+        if(entry.correctedTime == element.correctedTime)
+        {
+            numberTied += 1
+            place += n +1
+        }
+    });
+    entry.place = (parseFloat(place)/parseFloat(numberTied)).toFixed(1)
 
-while (i < entries.length) {
-    let start = i;
-    let end = i;
-
-    // Find all entries with the same corrected time
-    while (end + 1 < entries.length &&
-           entries[end + 1].correctedTime === entries[start].correctedTime) {
-        end++;
-    }
-
-    // Calculate average position (1-based)
-    let averageRank = ((start + 1) + (end + 1)) / 2;
-
-    // Apply rank to all tied entries
-    for (let j = start; j <= end; j++) {
-        if(entries[j].time == Infinity || entries[j].code != "")
-            {entries[j].position = entries.length+1}
-        entries[j].position = averageRank;
-    }
-    i = end + 1;
-}
     let correctedTime = "" 
     if(entry.correctedTime < Infinity){correctedTime = String(entry.correctedTime)}
     if(entry.code != ""){correctedTime=entry.code;}
