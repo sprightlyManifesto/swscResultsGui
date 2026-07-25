@@ -1,6 +1,4 @@
 import webview
-from pydantic import BaseModel, ValidationError
-from typing import Optional
 import os
 
 QEFilename = "2026_QE_APR.txt"
