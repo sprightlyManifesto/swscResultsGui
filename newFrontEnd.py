@@ -45,10 +45,10 @@ window = webview.create_window(
     "Race Manager",
     url=html,
     js_api=api,
-    width=1200,
-    height=600
+    width=1300,
+    height=800
 )
 
 webview.start(
-    debug=True
+    debug=False
 )

@@ -127,3 +127,19 @@ td,th {
 #raceDetailsForm button:hover {
     background: #1565c0;
 }
+
+#result {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* or center if preferred */
+    width: 100%;
+    gap: 50px;
+}
+
+#resultPY {
+    text-align: left;
+}
+
+#resultPersonal {
+    text-align: right;
+}

@@ -13,7 +13,10 @@
     <button onclick="createRace()">Create Race</button>
 </div>
 <div id="raceFileName"></div>
-<div id="result"></div>
+<div id="result">
+    <div id="resultPY"></div>    
+    <div id="resultPersonal"></div>
+</div>
 <div id="input">
     <table>
     <tr><th>QE</th><th>Helm</th><th>Crew</th><th>Class</th><th>Time</th><th>Laps</th><th>code</th></tr>
@@ -120,6 +123,72 @@ function selectByText(select,text)
     }
 }
 
+function TabulateResult()
+{
+
+entries.sort((a, b) => a.correctedTime - b.correctedTime);
+
+let tableHtml = `<table><tr>
+                <th>Class</th>
+                <th>Helm and Crew</th>
+                <th>Time</th>
+                <th>laps</th>
+                <th>Corrrected Time</th>
+                <th>Place</th>
+                </tr>`
+
+entries.forEach((entry, index) => {
+    let corrected = entry.correctedTime
+    let i = 0;
+    let place = 0
+    let numberTied = 0
+    
+    //calculate place
+    entries.forEach((element,n) => {
+        if(entry.correctedTime == element.correctedTime)
+        {
+            numberTied += 1
+            place += n +1
+        }
+    });
+    entry.place = (parseFloat(place)/parseFloat(numberTied)).toFixed(1)
+   
+    let correctedTime = "" 
+    if(!(entry.correctedTime == Infinity))
+        {correctedTime = String(entry.correctedTime)}
+    if(entry.code != "")
+        {
+            correctedTime=entry.code;
+            entry.place = entries.length + 1
+        }
+
+    tableHtml += `<tr><td>${entry.boatClass}</td>
+                <td>${entry.helm}<br>${entry.crew}</td>
+                <td>${entry.time}</td>
+                <td>${entry.laps}</td>
+                <td>${correctedTime}</td>
+                <td>${entry.place}</td>
+                </tr>` 
+    });
+
+    tableHtml += "</table>"
+return tableHtml
+}
+
+function calculateCorrected(maxLaps,entry,personal)
+{
+entry.correctedTime = Infinity
+    if(entry.time != 0 && entry.boatClass != "")
+    {
+        let handicap = parseFloat(pyDict.get(entry.boatClass))
+        if(personal){
+            handicap = (handicap * parseFloat(entry.personal))/1000
+        }
+        entry.correctedTime = Math.round((entry.time*maxLaps*1000.0/entry.laps/handicap))
+    }
+    return entry.correctedTime
+}
+
 function score()
 {
 let rows = document.getElementsByClassName("inputRow")
@@ -152,58 +221,18 @@ entries.forEach(entry => {
 });
 
 entries.forEach(entry => {
-    entry.corrected = Infinity
-    if(entry.time != 0 && entry.boatClass != "")
-    {
-        let py = parseFloat(pyDict.get(entry.boatClass))
-        console.log(py)
-        entry.correctedTime = Math.round((entry.time*maxLaps*1000.0/entry.laps/py))
-    }
+    entry.correctedTime = calculateCorrected(maxLaps,entry,false)
 });
 
-entries.sort((a, b) => a.correctedTime - b.correctedTime);
+let tableHtml = TabulateResult()
+document.getElementById("resultPersonal").innerHTML = "<h2>Personal</h2>" + tableHtml
 
-let tableHtml = `<table><tr>
-                <th>Class</th>
-                <th>Helm and Crew</th>
-                <th>Time</th>
-                <th>laps</th>
-                <th>Corrrected Time</th>
-                <th>Place</th>
-                </tr>`
+entries.forEach(entry => {
+    entry.correctedTime = calculateCorrected(maxLaps,entry,false)
+});
+tableHtml = TabulateResult()
 
-entries.forEach((entry, index) => {
-    
-    let corrected = entry.correctedTime
-    let i = 0;
-    let place = 0
-    let numberTied = 0
-    
-    entries.forEach((element,n) => {
-        if(entry.correctedTime == element.correctedTime)
-        {
-            numberTied += 1
-            place += n +1
-        }
-    });
-    entry.place = (parseFloat(place)/parseFloat(numberTied)).toFixed(1)
-
-    let correctedTime = "" 
-    if(entry.correctedTime < Infinity){correctedTime = String(entry.correctedTime)}
-    if(entry.code != ""){correctedTime=entry.code;}
-
-    tableHtml += `<tr><td>${entry.boatClass}</td>
-                <td>${entry.helm} ${entry.crew}</td>
-                <td>${entry.time}</td>
-                <td>${entry.laps}</td>
-                <td>${correctedTime}</td>
-                <td>${entry.place}</td>
-                </tr>` 
-    });
-
-    tableHtml += "</table>"
-
-document.getElementById("result").innerHTML = tableHtml
+document.getElementById("resultPY").innerHTML = "<h2>PY</h2>" + tableHtml
 
 //create Race file
 raceString = raceFileName +"\n"
@@ -222,13 +251,13 @@ let tbody=document.getElementById("rows");
 let tr=document.createElement("tr");
 tr.className = "inputRow"
 tr.innerHTML= `
-<td><select class="qe" onchange="score()"><option></option></td>
+<td><select class="qe"><option></option></td>
 <td><input class="helm" onchange="score()"></td>
 <td><input class="crew" onchange="score()"></td>
 <td><select class="boatClass" onchange="score()"><option></option></select></td>
 <td><input class="time" type="number" min="1" max="36000" step="1" onchange="score()"></td>
 <td><input class="laps" type="number" min="1" max="100" step="1" onchange="score()"></td>
-<td><select class="code">
+<td><select class="code" onchange="score()">
     <option></option>
     <option>DNF</option>
     <option>DNC</option>
@@ -274,7 +303,7 @@ QESelect.addEventListener("change",  (event) => {
       helm.value = QE.Helm;
       crew.value = QE.Crew;
       selectByText(boatClass,QE.boatClass)
-   
+      score()
   }
   else
   {
