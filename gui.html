@@ -14,8 +14,9 @@
 </div>
 <div id="raceFileName"></div>
 <div id="result">
-    <div id="resultPY"></div>    
-    <div id="resultPersonal"></div>
+    <div id="resultPY" style="width:49%;"></div>    
+    <div style="width: 2%;"></div>
+    <div id="resultPersonal" style="width:49%;"></div>
 </div>
 <div id="input">
     <table>
@@ -54,8 +55,6 @@ function createRace() {
     let raceOfficer = document.getElementById("raceOfficer").value;
     let date = document.getElementById("raceDate").value;
 
-    console.log("date")
-    console.log(date)
     // Clean values
     function clean(value) {
         return value
@@ -87,7 +86,7 @@ async function save(filname,fileString) {
 async function getQEs() {
 QES = await pywebview.api.QES();
 QES.forEach( row => {
-    QESdict[row.QE] =  row;
+    QESdict.set(row.QE,row);
     });
     QEsLoaded = true;
 }
@@ -104,10 +103,6 @@ async function getHandicaps() {
          pyDict.set(row.boatClass,row.PY);
         });
 
-    console.log("handicaps")
-    console.log(handicaps)
-    console.log("pyDict")
-    console.log(pyDict)
     //populate form with a selection of rows
     for(let i=0;i<26;i++){addRow()}
 }
@@ -133,7 +128,7 @@ let tableHtml = `<table><tr>
                 <th>Helm and Crew</th>
                 <th>Time</th>
                 <th>laps</th>
-                <th>Corrrected Time</th>
+                <th>Corrrected</th>
                 <th>Place</th>
                 </tr>`
 
@@ -163,7 +158,7 @@ entries.forEach((entry, index) => {
         }
 
     tableHtml += `<tr><td>${entry.boatClass}</td>
-                <td>${entry.helm}<br>${entry.crew}</td>
+                <td><div style="white-space: nowrap;">${entry.helm} ${entry.crew}</div></td>
                 <td>${entry.time}</td>
                 <td>${entry.laps}</td>
                 <td>${correctedTime}</td>
@@ -182,7 +177,12 @@ entry.correctedTime = Infinity
     {
         let handicap = parseFloat(pyDict.get(entry.boatClass))
         if(personal){
-            handicap = (handicap * parseFloat(entry.personal))/1000
+            if(QESdict.has(entry.QE)){
+            handicap = (handicap * parseFloat(QESdict.get(entry.QE)["Personal"]))/1000
+            }
+            else{
+            console.log(`${entry.QE} has not entry in QESdict`)
+            }
         }
         entry.correctedTime = Math.round((entry.time*maxLaps*1000.0/entry.laps/handicap))
     }
@@ -195,7 +195,6 @@ let rows = document.getElementsByClassName("inputRow")
 entries = []
 
 Array.from(rows).forEach(row => {
-    console.log(row)
     let entry = {
     QE : row.getElementsByClassName("qe")[0].value,
     helm: row.getElementsByClassName("helm")[0].value,
@@ -221,7 +220,7 @@ entries.forEach(entry => {
 });
 
 entries.forEach(entry => {
-    entry.correctedTime = calculateCorrected(maxLaps,entry,false)
+    entry.correctedTime = calculateCorrected(maxLaps,entry,true)
 });
 
 let tableHtml = TabulateResult()
@@ -299,7 +298,7 @@ QESelect.addEventListener("change",  (event) => {
   const QEcode = event.target.value;
   if(QEcode != "")
   {
-      QE = QESdict[QEcode];
+      QE = QESdict.get(QEcode);
       helm.value = QE.Helm;
       crew.value = QE.Crew;
       selectByText(boatClass,QE.boatClass)
