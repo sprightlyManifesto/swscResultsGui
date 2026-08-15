@@ -305,7 +305,7 @@ tr.innerHTML= `
 
 tbody.appendChild(tr);
 
-let classSelect = tr.getElementsByClassName("boatClass")[0]
+let boatClass = tr.getElementsByClassName("boatClass")[0]
 let QESelect = tr.getElementsByClassName("qe")[0]
 let helm = tr.getElementsByClassName("helm")[0]
 let crew = tr.getElementsByClassName("crew")[0]
@@ -317,7 +317,7 @@ handicaps.forEach(row => {
     let option = document.createElement("option")
     option.value = row["boatClass"]
     option.text = row["boatClass"]
-    classSelect.appendChild(option);
+    boatClass.appendChild(option);
 });
 
 QES.forEach(row => {
@@ -329,7 +329,7 @@ QES.forEach(row => {
 
 if(entry != null)
 {
-    classSelect.value = entry.boatClass;
+    boatClass.value = entry.boatClass;
     if(entry.QE != "")
         {
         QESelect.value = entry.QE;
