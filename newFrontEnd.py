@@ -1,5 +1,8 @@
 import webview
 import os
+import tkinter as tk
+from tkinter import filedialog
+
 
 QEFilename = "2026_QE_APR.txt"
 handicapFilename = "2026.txt"
@@ -37,7 +40,17 @@ class API:
         q = open(QEFilename,"r").read().strip("\n")
         open(filename,"w").write(t + "\n<HANDICAPS>\n" + h + "\n<QES>\n" + q)
         
-    
+    def getFile(self):
+        root = tk.Tk()
+        root.withdraw()
+        filename = filedialog.askopenfilename(
+            title="Select race file",
+            filetypes=[("Race files", "*.race")])
+
+        if filename:
+            print("Selected:", filename)
+        return (filename, open(filename,"r").read())
+
 api = API()
 html = os.path.join(os.path.dirname(__file__), "gui.html")
 
@@ -50,5 +63,5 @@ window = webview.create_window(
 )
 
 webview.start(
-    debug=False
+    debug=True
 )

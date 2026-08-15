@@ -5,13 +5,15 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-<div id="raceDetailsForm">
-    <div><label for="raceDate">Date:</label><input type="date" id="raceDate"></div>
-    <div><label for="raceNumber">Race Number:</label><input type="number" id="raceNumber" value=""></div>
-    <div><label for="raceOfficer">Race Officer:</label><input type="text" id="raceOfficer" value=""></div>
-    <div><label for="series">Series:</label><input type="text" id="series" value=""></div>
-    <button onclick="createRace()">Create Race</button>
-</div>
+    <div id="raceDetailsForm">
+        <div><label for="raceDate">Date:</label><input type="date" id="raceDate"></div>
+        <div><label for="raceNumber">Race Number:</label><input type="number" id="raceNumber" value=""></div>
+        <div><label for="raceOfficer">Race Officer:</label><input type="text" id="raceOfficer" value=""></div>
+        <div><label for="series">Series:</label><input type="text" id="series" value=""></div>
+        <button onclick="createRace()">Create Race</button>
+        <div><br><br></div>
+        <button onclick="openRaceFileDialog()">re-open existing race</button>
+    </div>
 <div id="raceFileName"></div>
 <div id="result">
     <div id="resultPY" style="width:49%;"></div>    
@@ -24,7 +26,7 @@
 <tbody id="rows"></tbody>
 </table>
 <div class="button-bar">
-<button onclick="addRow()">Add Entry</button>
+<button onclick="addRow(null)">Add Entry</button>
 </div>
 <script>
 
@@ -47,6 +49,41 @@ window.addEventListener('pywebviewready', function () {
     getQEs()
     getHandicaps()
 });
+
+
+  async function openRaceFileDialog() {
+    const[fileName,contents] = await pywebview.api.getFile();
+      if (fileName) {
+    raceFileName = fileName;
+    document.getElementById("raceDetailsForm").style.display = "none";
+    document.getElementById("input").style.display = "block";
+    setTitle()
+    
+   const lines = contents.split(/\r?\n/);
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim() === '<HANDICAPS>') {
+            break;
+        }
+        toks = line.split(",");
+        let entry = {
+        QE : toks[0],
+        helm: toks[1],
+        crew: toks[2],
+        boatClass: toks[3],
+        time: toks[5],
+        code: toks[7],
+        laps: toks[6],
+        }
+        addRow(entry)
+    }
+    
+    document.getElementById("raceDetailsForm").style.display = "none";
+    document.getElementById("input").style.display = "block";
+    score();
+      }
+}
 
 function createRace() {
     // Read values
@@ -73,6 +110,8 @@ function createRace() {
     document.getElementById("raceDetailsForm").style.display = "none";
     document.getElementById("input").style.display = "block";
     setTitle()
+     //populate form with a selection of rows
+    for(let i=0;i<26;i++){addRow(null)}
 }
 
 async function setTitle(params) {
@@ -102,9 +141,6 @@ async function getHandicaps() {
     handicaps.forEach( row => {
          pyDict.set(row.boatClass,row.PY);
         });
-
-    //populate form with a selection of rows
-    for(let i=0;i<26;i++){addRow()}
 }
 
 function selectByText(select,text)
@@ -243,8 +279,9 @@ save(raceFileName,raceString)
 
 }
 
-function addRow()
+function addRow(entry)
 {
+
 let classes = []
 let tbody=document.getElementById("rows");
 let tr=document.createElement("tr");
@@ -272,13 +309,9 @@ let classSelect = tr.getElementsByClassName("boatClass")[0]
 let QESelect = tr.getElementsByClassName("qe")[0]
 let helm = tr.getElementsByClassName("helm")[0]
 let crew = tr.getElementsByClassName("crew")[0]
-let boatClass = tr.getElementsByClassName("boatClass")[0]
-
-for(let i =1;i<26;i++){
-    let option = document.createElement("option")
-    option.value = i
-    option.text = i
-};
+let code = tr.getElementsByClassName("code")[0]
+let time = tr.getElementsByClassName("time")[0]
+let laps = tr.getElementsByClassName("laps")[0]
 
 handicaps.forEach(row => {
     let option = document.createElement("option")
@@ -293,6 +326,20 @@ QES.forEach(row => {
     option.text = row["QE"] 
     QESelect.appendChild(option);
 });
+
+if(entry != null)
+{
+    classSelect.value = entry.boatClass;
+    if(entry.QE != "")
+        {
+        QESelect.value = entry.QE;
+        }
+    helm.value = entry.helm
+    crew.value = entry.crew
+    code.value = entry.code
+    time.value = entry.time
+    laps.value = entry.laps
+}
 
 QESelect.addEventListener("change",  (event) => {
   const QEcode = event.target.value;
@@ -310,8 +357,7 @@ QESelect.addEventListener("change",  (event) => {
       crew.value = "";
       selectByText(boatClass,"")
   }
-});
-
+})
 }
 
 function saveRow(button)

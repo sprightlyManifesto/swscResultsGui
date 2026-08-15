@@ -1,5 +1,3 @@
-RH400JD,Richard Hargreaves,Jess Day,RS 400,1101,957,S,G
-RH400SB,Richard Hargreaves,Sarah Binstead,RS 400,1101,977,S,G
 ABH,Andy Bunyan,,HARRIER,,1048,M,S
 ABSX, Andy Bunyan,,SHADOW X,,1141,M,S
 AB15,Andy Bunyan,,SPRINT 15,1546,1064,M,S
@@ -279,6 +277,9 @@ RH2EB,Richard Hargreaves,Emily Binstead,RS 200,1418,1094,S,G
 RH2RF,Richard Hargreaves,Roger Folwer,RS 200,1418,988,S,G
 RH400ES,Richard Hargreaves,Emma Southwell,RS 400,,1026,S,G
 RH3,Richard Hargreaves,,RS 300,373,947,S,G
+RH400ES,Richard Hargreaves,Emma Southwell,RS 400,1101,957,S,G
+RH400JD,Richard Hargreaves,Jess Day,RS 400,1101,957,S,G
+RH400SB,Richard Hargreaves,Sarah Binstead,RS 400,1101,977,S,G
 RH400CC,Richard Hargreaves,Colin Clasper,RS 400,,986,S,G
 RH400JB,Richard Hargreaves,Jodie Bowman,RS 400,,868,S,G
 RH400JH,Richard Hargreaves,James Hargreaves,RS 400,1101,902,S,G
