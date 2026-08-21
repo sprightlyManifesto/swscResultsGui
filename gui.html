@@ -21,6 +21,7 @@
     <div id="resultPersonal" style="width:49%;"></div>
 </div>
 <div id="input">
+    <button onclick="score()">Score</button>
     <table>
     <tr><th>QE</th><th>Helm</th><th>Crew</th><th>Class</th><th>Time</th><th>Laps</th><th>code</th></tr>
 <tbody id="rows"></tbody>
@@ -81,7 +82,6 @@ window.addEventListener('pywebviewready', function () {
     
     document.getElementById("raceDetailsForm").style.display = "none";
     document.getElementById("input").style.display = "block";
-    score();
       }
 }
 
@@ -288,12 +288,12 @@ let tr=document.createElement("tr");
 tr.className = "inputRow"
 tr.innerHTML= `
 <td><select class="qe"><option></option></td>
-<td><input class="helm" onchange="score()"></td>
-<td><input class="crew" onchange="score()"></td>
-<td><select class="boatClass" onchange="score()"><option></option></select></td>
-<td><input class="time" type="number" min="1" max="36000" step="1" onchange="score()"></td>
-<td><input class="laps" type="number" min="1" max="100" step="1" onchange="score()"></td>
-<td><select class="code" onchange="score()">
+<td><input class="helm" onchange=""></td>
+<td><input class="crew" onchange=""></td>
+<td><select class="boatClass" onchange=""><option></option></select></td>
+<td><input class="time" type="number" min="1" max="36000" step="1" onchange=""></td>
+<td><input class="laps" type="number" min="1" max="100" step="1" onchange=""></td>
+<td><select class="code" onchange="">
     <option></option>
     <option>DNF</option>
     <option>DNC</option>
@@ -349,7 +349,6 @@ QESelect.addEventListener("change",  (event) => {
       helm.value = QE.Helm;
       crew.value = QE.Crew;
       selectByText(boatClass,QE.boatClass)
-      score()
   }
   else
   {
