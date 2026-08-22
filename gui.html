@@ -10,6 +10,7 @@
         <div><label for="raceNumber">Race Number:</label><input type="number" id="raceNumber" value=""></div>
         <div><label for="raceOfficer">Race Officer:</label><input type="text" id="raceOfficer" value=""></div>
         <div><label for="series">Series:</label><input type="text" id="series" value=""></div>
+        <div><label class="dark-checkbox"><input type="checkbox" id="cloneEntries" value="no">Copy entries list from last race</label></div>
         <button onclick="createRace()">Create Race</button>
         <div><br><br></div>
         <button onclick="openRaceFileDialog()">re-open existing race</button>
@@ -112,10 +113,43 @@ function createRace() {
     document.getElementById("raceDetailsForm").style.display = "none";
     document.getElementById("input").style.display = "block";
     setTitle()
-     //populate form with a selection of rows
+    
+    checkbox = document.getElementById("cloneEntries") 
+    if(!checkbox.checked)
+    {
+    //populate form with a selection of rows
     for(let i=0;i<26;i++){addRow(null)}
+    }
+    else
+    {
+        setEntriesFromLastRace()
+    }
 }
 
+async function setEntriesFromLastRace()
+{
+contents = await pywebview.api.getLastRace();
+    
+   const lines = contents.split(/\r?\n/);
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim() === '<HANDICAPS>') {
+            break;
+        }
+        toks = line.split(",");
+        let entry = {
+        QE : toks[0],
+        helm: toks[1],
+        crew: toks[2],
+        boatClass: toks[3],
+        }
+        addRow(entry)
+    }
+    
+    document.getElementById("raceDetailsForm").style.display = "none";
+    document.getElementById("input").style.display = "block";
+}
 async function setTitle(params) {
     await pywebview.api.setTitle(raceFileName);
 }
@@ -302,10 +336,17 @@ tr.innerHTML= `
     <option>OCS</option>
     <option>RTD</option>
     </select></td>
+    <button class="deleteButton" title="Delete"  onclick="this.closest('tr').remove()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm-2 6h2v9H7V9zm4 0h2v9h-2V9zm4 0h2v9h-2V9z"/>
+        <path d="M6 21h12l1-14H5l1 14z"/>
+    </svg>
+</button>
 </td>
 `;
 tbody.appendChild(tr);
 
+let deleteButton = tr.getElementsByClassName("deleteButton")[0]
 let boatClass = tr.getElementsByClassName("boatClass")[0]
 let QESelect = tr.getElementsByClassName("qe")[0]
 let helm = tr.getElementsByClassName("helm")[0]
@@ -314,19 +355,18 @@ let code = tr.getElementsByClassName("code")[0]
 let time = tr.getElementsByClassName("time")[0]
 let laps = tr.getElementsByClassName("laps")[0]
 
+
 let boatClassOptions = []
-let qeOptions = []
 handicaps.forEach(row => {
     boatClassOptions.push(row["boatClass"])
 });
+setupAutocomplete(boatClass, boatClassOptions);
 
+let qeOptions = []
 QES.forEach(row => {
     qeOptions.push(row["QE"])
 });
-
-setupAutocomplete(boatClass, boatClassOptions);
 setupAutocomplete(QESelect, qeOptions);
-
 
 if(entry != null)
 {
@@ -342,14 +382,14 @@ if(entry != null)
     laps.value = entry.laps
 }
 
-QESelect.addEventListener("change",  (event) => {
-  const QEcode = event.target.value;
-  if(QEcode != "")
+
+function populateQE(QEcode){
+if(QEcode != "")
   {
       QE = QESdict.get(QEcode);
       helm.value = QE.Helm;
       crew.value = QE.Crew;
-      selectByText(boatClass,QE.boatClass)
+      boatClass.value = QE.boatClass;
   }
   else
   {
@@ -357,7 +397,18 @@ QESelect.addEventListener("change",  (event) => {
       crew.value = "";
       selectByText(boatClass,"")
   }
-})
+}
+
+QESelect.addEventListener("autocomplete:selected", function (event) {
+        const QEcode = event.detail.value;
+        populateQE(QEcode)
+    });
+
+QESelect.addEventListener("change",  (event) => {
+  const QEcode = event.target.value;
+  populateQE(QEcode)
+});
+
 }
 
 function saveRow(button)

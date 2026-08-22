@@ -8,6 +8,87 @@ body {
     padding:20px;
 }
 
+.deleteButton {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: #8e8e8e; 
+}
+
+.deleteButton svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.deleteButton:hover {
+    color: #ef4444;
+}
+
+.dark-checkbox {
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 10px;
+
+    color: #ececec;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Checkbox ONLY */
+.dark-checkbox > input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+
+    display: inline-grid;
+
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+
+    flex: none !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    flex-basis: 24px !important;
+
+    margin: 0;
+    padding: 0;
+
+    box-sizing: border-box;
+
+    background: #2f2f2f;
+    border: 1px solid #666;
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    place-content: center;
+}
+
+.dark-checkbox > input[type="checkbox"]:checked {
+    background: #10a37f;
+    border-color: #10a37f;
+}
+
+.dark-checkbox > input[type="checkbox"]:checked::after {
+    content: "";
+
+    width: 6px;
+    height: 11px;
+
+    border: solid white;
+    border-width: 0 2px 2px 0;
+
+    transform: rotate(45deg);
+    margin-top: -3px;
+}
 .button-bar {
     display: flex;
     justify-content: space-between;

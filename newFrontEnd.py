@@ -2,6 +2,7 @@ import webview
 import os
 import tkinter as tk
 from tkinter import filedialog
+from pathlib import Path
 
 
 QEFilename = "2026_QE_APR.txt"
@@ -39,7 +40,17 @@ class API:
         h = open(handicapFilename,"r").read().strip("\n")
         q = open(QEFilename,"r").read().strip("\n")
         open(filename,"w").write(t + "\n<HANDICAPS>\n" + h + "\n<QES>\n" + q)
-        
+
+    def getLastRace(self):
+        files = [
+        f for f in Path(".").iterdir()
+        if f.is_file() and "race" in f.name.lower()
+        ]
+        if not files:
+            return None
+        latest = max(files, key=lambda f: f.stat().st_mtime)
+        return latest.read_text(encoding="utf-8")
+
     def getFile(self):
         root = tk.Tk()
         root.withdraw()
