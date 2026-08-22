@@ -63,5 +63,5 @@ window = webview.create_window(
 )
 
 webview.start(
-    debug=False
+    debug=True
 )

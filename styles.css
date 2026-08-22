@@ -128,7 +128,6 @@ td,th {
     background: #1565c0;
 }
 
-
 #result {
     display: flex;
     justify-content: space-between;
@@ -136,13 +135,3 @@ td,th {
     width: 100%;
 }
 
-/*
-#resultPY {
-    text-align: left;
-    
-}
-
-#resultPersonal {
-    text-align: right;
-}
-*/

@@ -29,6 +29,8 @@
 <div class="button-bar">
 <button onclick="addRow(null)">Add Entry</button>
 </div>
+
+<script src="autocomplete.js"></script>
 <script>
 
 document.getElementById("raceDetailsForm").style.display = "block";
@@ -287,10 +289,10 @@ let tbody=document.getElementById("rows");
 let tr=document.createElement("tr");
 tr.className = "inputRow"
 tr.innerHTML= `
-<td><select class="qe"><option></option></td>
+<td><input class="qe"></td>
 <td><input class="helm" onchange=""></td>
 <td><input class="crew" onchange=""></td>
-<td><select class="boatClass" onchange=""><option></option></select></td>
+<td><input class="boatClass"></td>
 <td><input class="time" type="number" min="1" max="36000" step="1" onchange=""></td>
 <td><input class="laps" type="number" min="1" max="100" step="1" onchange=""></td>
 <td><select class="code" onchange="">
@@ -302,7 +304,6 @@ tr.innerHTML= `
     </select></td>
 </td>
 `;
-
 tbody.appendChild(tr);
 
 let boatClass = tr.getElementsByClassName("boatClass")[0]
@@ -313,19 +314,19 @@ let code = tr.getElementsByClassName("code")[0]
 let time = tr.getElementsByClassName("time")[0]
 let laps = tr.getElementsByClassName("laps")[0]
 
+let boatClassOptions = []
+let qeOptions = []
 handicaps.forEach(row => {
-    let option = document.createElement("option")
-    option.value = row["boatClass"]
-    option.text = row["boatClass"]
-    boatClass.appendChild(option);
+    boatClassOptions.push(row["boatClass"])
 });
 
-QES.forEach(row => {
-    let option = document.createElement("option")
-    option.value = row["QE"]
-    option.text = row["QE"] 
-    QESelect.appendChild(option);
+qe.forEach(row => {
+    qeOptions.push(row["QE"])
 });
+
+setupAutocomplete(boatClass, boatClassOptions);
+setupAutocomplete(QESelect, qeOptions);
+
 
 if(entry != null)
 {
